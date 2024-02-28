@@ -59,9 +59,7 @@ async function addPrDataToLLM(data) {
 }
 
 async function generatePrEval(prDiff) {
-  console.log("FIRED!!!!");
   const generatePrompt = `Given the following PR diff:\n\n${prDiff}\n\nPlease review the changes and provide feedback. Answer in markedown format.`;
-  console.log({ generatePrompt });
   const response = await client.graphql
     .get()
     .withClassName("PrData")
@@ -72,7 +70,7 @@ async function generatePrEval(prDiff) {
     .withLimit(3)
     .do();
 
-  console.log({ response }, "hey");
+  console.log(JSON.stringify(response, null, 2));
 
   return response;
 }
