@@ -32,7 +32,8 @@ export const getPrData = async (req, res) => {
 
 export const addPrData = async (req, res) => {
   try {
-    const data = await getGithubData();
+    const data = req.body;
+    console.log({ payload: data });
     const result = await addPrDataToLLM(data);
     res.status(200).json({ result });
   } catch (error) {
