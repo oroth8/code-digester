@@ -69,7 +69,8 @@ async function generatePrEval(prDiff) {
     })
     .withLimit(3)
     .do();
-  console.log(JSON.stringify(response, null, 2));
+
+  console.log({ response }, "hey");
 
   return response;
 }
