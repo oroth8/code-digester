@@ -3,6 +3,8 @@ import {
   addSchema,
   getPrData,
   addPrData,
+  generate,
+  read,
 } from "../controllers/llm.controller.js";
 
 const router = express.Router();
@@ -11,5 +13,7 @@ const router = express.Router();
 router.post("/add-schema", addSchema);
 router.get("/get-pr-data", getPrData);
 router.post("/add-pr-data", addPrData);
+router.get("/generate-pr-eval", generate);
+router.get("/read/:className", read);
 
 export default router;

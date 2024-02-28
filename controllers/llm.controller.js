@@ -2,6 +2,8 @@ import {
   addSchemaToLLM,
   getGithubData,
   addPrDataToLLM,
+  generatePrEval,
+  readObject,
 } from "../services/llm.service.js";
 
 const handleErrorResponse = (error, res) => {
@@ -35,6 +37,25 @@ export const addPrData = async (req, res) => {
     const data = req.body;
     console.log({ payload: data });
     const result = await addPrDataToLLM(data);
+    res.status(200).json({ result });
+  } catch (error) {
+    handleErrorResponse(error, res);
+  }
+};
+
+export const generate = async (req, res) => {
+  try {
+    const result = await generatePrEval();
+    res.status(200).json({ result });
+  } catch (error) {
+    handleErrorResponse(error, res);
+  }
+};
+
+export const read = async (req, res) => {
+  console.log(req.params.className);
+  try {
+    const result = await readObject(req.params.className);
     res.status(200).json({ result });
   } catch (error) {
     handleErrorResponse(error, res);
