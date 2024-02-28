@@ -58,29 +58,20 @@ async function addPrDataToLLM(data) {
   }
 }
 
-async function generatePrEval() {
-  const generatePrompt =
-    "Evaluate the following code: {prDiff}. If there are any issues, provide a detailed explanation. Otherwise, approve the pull request.";
-
-  const result = await client.graphql
+async function generatePrEval(prDiff) {
+  const generatePrompt = `Given the following PR diff:\n\n${prDiff}\n\nPlease review the changes and provide feedback.`;
+  const response = await client.graphql
     .get()
     .withClassName("PrData")
-    .withBm25({
-      query: "github pull request",
-    })
+    .withFields("prDiff reviewBody")
     .withGenerate({
       groupedTask: generatePrompt,
     })
-    // .withNearText({
-    //   concepts: ["World history"],
-    // })
-    .withFields("prDiff reviewBody")
-    .withLimit(1)
+    .withLimit(3)
     .do();
+  console.log(JSON.stringify(response, null, 2));
 
-  console.log(JSON.stringify(result, null, 2));
-
-  return result;
+  return response;
 }
 
 async function readObject(className) {
