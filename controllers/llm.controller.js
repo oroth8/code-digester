@@ -45,7 +45,9 @@ export const addPrData = async (req, res) => {
 
 export const generate = async (req, res) => {
   try {
+    console.log("FIRED CONTROLLER");
     const prDiff = req.body.prDiff;
+    console.log({ prDiff });
     const result = await generatePrEval(prDiff);
     res.status(200).json({ result });
   } catch (error) {
