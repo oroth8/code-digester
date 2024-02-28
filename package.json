@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
-    "server": "node app.js"
+    "start": "node app.js"
   },
   "author": "Owen Roth",
   "license": "ISC",
@@ -17,5 +17,8 @@
     "pdf-parse": "^1.1.1",
     "weaviate-ts-client": "^2.0.0"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  }
 }
