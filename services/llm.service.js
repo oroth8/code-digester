@@ -1,6 +1,7 @@
 import weaviate, { ApiKey } from "weaviate-ts-client";
 import axios from "axios";
 import dotenv from "dotenv";
+import OpenAI from "openai";
 
 dotenv.config();
 
@@ -12,6 +13,10 @@ const client = weaviate.client({
   headers: {
     "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY, // Use environment variable
   },
+});
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Define the Weaviate VDB Schema
@@ -134,6 +139,34 @@ function parseGithubDiff(diff) {
   return { additions, deletions, context };
 }
 
+function parseGithubDiffCombine(diff) {
+  // Split the diff into lines
+  const lines = diff.split("\n");
+
+  // Initialize strings for different types of lines
+  let additions = "";
+  let deletions = "";
+  let context = "";
+
+  lines.forEach((line) => {
+    if (line.startsWith("+") && !line.startsWith("+++")) {
+      // Line is an addition
+      additions += line.substring(1) + "\n"; // Remove the '+' prefix
+    } else if (line.startsWith("-") && !line.startsWith("---")) {
+      // Line is a deletion
+      deletions += line.substring(1) + "\n"; // Remove the '-' prefix
+    } else if (!line.startsWith("+++") && !line.startsWith("---")) {
+      // Line is context (unchanged)
+      context += line + "\n";
+    }
+    // Skip the lines that start with '+++' or '---' as they are file indicators
+  });
+
+  // Combine the strings into one, with labels or separators as needed
+  const combinedDiff = `Additions:\n${additions}\nDeletions:\n${deletions}\nContext:\n${context}`;
+  return combinedDiff.trim(); // Trim to remove any leading/trailing newline characters
+}
+
 // Define the Weaviate VDB Generative module Query
 async function generatePrEval(prDiff) {
   //   const diffUrl = `https://api.github.com/repos/oroth8/llm-action/pulls/${5}`;
@@ -172,10 +205,31 @@ async function readObject(className) {
   return result;
 }
 
+async function createPrFromDiff(prDiff) {
+  //   const diffUrl = `https://api.github.com/repos/oroth8/llm-action/pulls/${5}`;
+  //   const diffResponse = await axios.get(diffUrl, {
+  //     headers: { Accept: "application/vnd.github.v3.diff" },
+  //   });
+  //   const prDiff = diffResponse.data;
+  const parsedDiff = parseGithubDiffCombine(prDiff);
+  const chatCompletion = await openai.chat.completions.create({
+    messages: [
+      {
+        role: "user",
+        content: `Given the following PR diff:${parsedDiff} Please review the changes and provide feedback. Answer in markdown format and only.`,
+      },
+    ],
+    model: "gpt-4-0125-preview",
+  });
+
+  return chatCompletion;
+}
+
 export {
   addSchemaToLLM,
   addPrDataToLLM,
   getGithubData,
   generatePrEval,
   readObject,
+  createPrFromDiff,
 };

@@ -5,6 +5,7 @@ import {
   addPrData,
   generate,
   read,
+  createPr,
 } from "../controllers/llm.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/get-pr-data", getPrData);
 router.post("/add-pr-data", addPrData);
 router.post("/generate-pr-eval", generate);
 router.get("/read/:className", read);
+router.post("/create-pr", createPr);
 
 export default router;

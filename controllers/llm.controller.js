@@ -4,6 +4,7 @@ import {
   addPrDataToLLM,
   generatePrEval,
   readObject,
+  createPrFromDiff,
 } from "../services/llm.service.js";
 
 const handleErrorResponse = (error, res) => {
@@ -57,6 +58,16 @@ export const read = async (req, res) => {
   console.log(req.params.className);
   try {
     const result = await readObject(req.params.className);
+    res.status(200).json({ result });
+  } catch (error) {
+    handleErrorResponse(error, res);
+  }
+};
+
+export const createPr = async (req, res) => {
+  try {
+    const prDiff = req.body.prDiff;
+    const result = await createPrFromDiff(prDiff);
     res.status(200).json({ result });
   } catch (error) {
     handleErrorResponse(error, res);
