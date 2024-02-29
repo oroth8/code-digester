@@ -219,7 +219,7 @@ async function createPrFromDiff(prDiff) {
         content: `Given the following PR diff:${parsedDiff} Please review the changes and provide feedback. Answer in markdown format and only.`,
       },
     ],
-    model: "gpt-4-0125-preview",
+    model: "gpt-3.5-turbo-0125",
   });
 
   return chatCompletion;
