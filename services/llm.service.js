@@ -112,43 +112,45 @@ function parseGithubDiff(diff) {
   // Split the diff into lines
   const lines = diff.split("\n");
 
-  // Initialize strings for different types of lines
-  let additions = "";
-  let deletions = "";
-  let context = "";
+  // Initialize containers for different types of lines
+  const additions = [];
+  const deletions = [];
+  const context = [];
 
   lines.forEach((line) => {
     if (line.startsWith("+") && !line.startsWith("+++")) {
       // Line is an addition
-      additions += line.substring(1) + "\n"; // Remove the '+' prefix
+      additions.push(line.substring(1)); // Remove the '+' prefix
     } else if (line.startsWith("-") && !line.startsWith("---")) {
       // Line is a deletion
-      deletions += line.substring(1) + "\n"; // Remove the '-' prefix
+      deletions.push(line.substring(1)); // Remove the '-' prefix
     } else if (!line.startsWith("+++") && !line.startsWith("---")) {
       // Line is context (unchanged)
-      context += line + "\n";
+      context.push(line);
     }
     // Skip the lines that start with '+++' or '---' as they are file indicators
   });
 
-  // Combine the strings into one, with labels or separators as needed
-  const combinedDiff = `Additions:\n${additions}\nDeletions:\n${deletions}\nContext:\n${context}`;
-  return combinedDiff.trim(); // Trim to remove any leading/trailing newline characters
+  return { additions, deletions, context };
 }
 
 // Define the Weaviate VDB Generative module Query
 async function generatePrEval(prDiff) {
+  //   const diffUrl = `https://api.github.com/repos/oroth8/llm-action/pulls/${5}`;
+  //   const diffResponse = await axios.get(diffUrl, {
+  //     headers: { Accept: "application/vnd.github.v3.diff" },
+  //   });
+  //   const prDiff = diffResponse.data;
   const parsedDiff = parseGithubDiff(prDiff);
   console.log({ parsedDiff });
-  const generatePrompt = `Given the following PR diff:${parsedDiff} Please review the changes and provide feedback. Answer in markdown format.`;
+  const generatePrompt = `Given the following PR diff:${parsedDiff}Please review the changes and provide feedback. Answer in markedown format.`;
   const response = await client.graphql
     .get()
     .withClassName("PrData")
-    .withFields(
-      'prDiff reviewBody _additional { generate(groupedResult: {task: "' +
-        generatePrompt +
-        '"}) { error groupedResult } }'
-    )
+    .withFields("prDiff reviewBody")
+    .withGenerate({
+      groupedTask: generatePrompt,
+    })
     .withLimit(3)
     .do();
 
