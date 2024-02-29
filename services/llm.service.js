@@ -143,13 +143,16 @@ async function generatePrEval(prDiff) {
   //   const prDiff = diffResponse.data;
   const parsedDiff = parseGithubDiff(prDiff);
   console.log({ parsedDiff });
-  const generatePrompt = `Given the following PR diff:${parsedDiff}Please review the changes and provide feedback. Answer in markedown format.`;
+  const generatePrompt = `Given the following PR diff:${parsedDiff} Please review the changes and provide feedback. Answer in markdown format and only.`;
   const response = await client.graphql
     .get()
     .withClassName("PrData")
     .withFields("prDiff reviewBody")
     .withGenerate({
       groupedTask: generatePrompt,
+    })
+    .withNearText({
+      concepts: ["review"],
     })
     .withLimit(3)
     .do();
