@@ -108,32 +108,56 @@ async function addPrDataToLLM(data) {
   }
 }
 
+function parseGithubDiff(diff) {
+  // Split the diff into lines
+  const lines = diff.split("\n");
+
+  // Initialize strings for different types of lines
+  let additions = "";
+  let deletions = "";
+  let context = "";
+
+  lines.forEach((line) => {
+    if (line.startsWith("+") && !line.startsWith("+++")) {
+      // Line is an addition
+      additions += line.substring(1) + "\n"; // Remove the '+' prefix
+    } else if (line.startsWith("-") && !line.startsWith("---")) {
+      // Line is a deletion
+      deletions += line.substring(1) + "\n"; // Remove the '-' prefix
+    } else if (!line.startsWith("+++") && !line.startsWith("---")) {
+      // Line is context (unchanged)
+      context += line + "\n";
+    }
+    // Skip the lines that start with '+++' or '---' as they are file indicators
+  });
+
+  // Combine the strings into one, with labels or separators as needed
+  const combinedDiff = `Additions:\n${additions}\nDeletions:\n${deletions}\nContext:\n${context}`;
+  return combinedDiff.trim(); // Trim to remove any leading/trailing newline characters
+}
+
 // Define the Weaviate VDB Generative module Query
 async function generatePrEval(prDiff) {
-  const query = `
-  mutation GeneratePrEval($task: String!) {
-    Get {
-      PrData(limit: 3) {
-        prDiff
-        reviewBody
-        _additional {
-          generate(groupedResult: {task: $task}) {
-            error
-            groupedResult
-          }
-        }
-      }
-    }
-  }
-`;
+  const parsedDiff = parseGithubDiff(prDiff);
+  console.log({ parsedDiff });
+  const generatePrompt = `Given the following PR diff:${parsedDiff}Please review the changes and provide feedback. Answer in markedown format.`;
+  const response = await client.graphql
+    .get()
+    .withClassName("PrData")
+    .withFields("prDiff reviewBody")
+    .withGenerate({
+      groupedTask: generatePrompt,
+    })
+    .withLimit(3)
+    .do();
 
-  // Prepare your PR diff and other inputs as variables
-  const variables = {
-    task: `Given the following PR diff:${prDiff}Please review the changes and provide feedback. Answer in markdown format.`,
-  };
-  const response = await client.graphql(query, variables);
   console.log(JSON.stringify(response, null, 2));
+
+  return response;
 }
+
+// Example usage, assuming prDiff is defined
+// generatePrEval(prDiff);
 
 async function readObject(className) {
   const result = await client.data.getterById().withClassName(className).do();
