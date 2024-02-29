@@ -110,23 +110,29 @@ async function addPrDataToLLM(data) {
 
 // Define the Weaviate VDB Generative module Query
 async function generatePrEval(prDiff) {
-  const stringifyPrDiff = JSON.stringify(prDiff, null, 2);
-  console.log({ stringifyPrDiff });
-  const generatePrompt = `Given the following PR diff:${stringifyPrDiff}Please review the changes and provide feedback. Answer in markdown format.`;
-  const response = await client.graphql
-    .get()
-    .withClassName("PrData")
-    .withFields(
-      'prDiff reviewBody _additional { generate(groupedResult: {task: "' +
-        generatePrompt +
-        '"}) { error groupedResult } }'
-    )
-    .withLimit(3)
-    .do();
+  const query = `
+  mutation GeneratePrEval($task: String!) {
+    Get {
+      PrData(limit: 3) {
+        prDiff
+        reviewBody
+        _additional {
+          generate(groupedResult: {task: $task}) {
+            error
+            groupedResult
+          }
+        }
+      }
+    }
+  }
+`;
 
+  // Prepare your PR diff and other inputs as variables
+  const variables = {
+    task: `Given the following PR diff:${prDiff}Please review the changes and provide feedback. Answer in markdown format.`,
+  };
+  const response = await client.graphql(query, variables);
   console.log(JSON.stringify(response, null, 2));
-
-  return response;
 }
 
 async function readObject(className) {
