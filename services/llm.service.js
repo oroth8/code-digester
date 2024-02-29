@@ -95,19 +95,13 @@ async function getGithubData() {
 }
 
 // Add PR data to Weaviate
-async function addPrDataToLLM() {
-  const data = await getGithubData();
-  console.log({ data });
+async function addPrDataToLLM(data) {
   try {
-    data.forEach(async (pr) => {
-      const res = await client.data
-        .creator()
-        .withClassName("PrData")
-        .withProperties(pr)
-        .do();
-      console.log(res.id); // Consider a more sophisticated logging approach
-    });
-    return true;
+    return await client.data
+      .creator()
+      .withClassName("PrData")
+      .withProperties(data)
+      .do();
   } catch (error) {
     console.error(`Failed to add PR data: ${error.toString()}`);
     throw new Error("Failed to add PR data", { cause: error });
