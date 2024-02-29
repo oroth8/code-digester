@@ -112,14 +112,15 @@ async function addPrDataToLLM(data) {
 async function generatePrEval(prDiff) {
   const stringifyPrDiff = JSON.stringify(prDiff, null, 2);
   console.log({ stringifyPrDiff });
-  const generatePrompt = `Given the following PR diff:${stringifyPrDiff}Please review the changes and provide feedback. Answer in markedown format.`;
+  const generatePrompt = `Given the following PR diff:${stringifyPrDiff}Please review the changes and provide feedback. Answer in markdown format.`;
   const response = await client.graphql
     .get()
     .withClassName("PrData")
-    .withFields("prDiff reviewBody")
-    .withGenerate({
-      groupedTask: generatePrompt,
-    })
+    .withFields(
+      'prDiff reviewBody _additional { generate(groupedResult: {task: "' +
+        generatePrompt +
+        '"}) { error groupedResult } }'
+    )
     .withLimit(3)
     .do();
 
