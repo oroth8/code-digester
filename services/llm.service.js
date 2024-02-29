@@ -116,8 +116,9 @@ async function addPrDataToLLM() {
 
 // Define the Weaviate VDB Generative module Query
 async function generatePrEval(prDiff) {
-  JSON.stringify(prDiff);
-  const generatePrompt = `Given the following PR diff:${prDiff}Please review the changes and provide feedback. Answer in markedown format.`;
+  const stringifyPrDiff = JSON.stringify(prDiff, null, 2);
+  console.log({ stringifyPrDiff });
+  const generatePrompt = `Given the following PR diff:${stringifyPrDiff}Please review the changes and provide feedback. Answer in markedown format.`;
   const response = await client.graphql
     .get()
     .withClassName("PrData")
